@@ -19,6 +19,23 @@ Features:
 
 import streamlit as st
 import pandas as pd
+def fetch_historical_data(hours=24):
+    import pandas as pd
+    import numpy as np
+    from datetime import datetime, timedelta
+
+    now = datetime.now()
+    timestamps = [now - timedelta(hours=i) for i in range(hours)][::-1]
+
+    data = {
+        "timestamp": timestamps,
+        "consumption_kwh": np.random.uniform(2.5, 6.5, size=hours),
+        "production_kwh": np.random.uniform(1.0, 5.0, size=hours),
+        "grid_kwh": np.random.uniform(0.5, 3.0, size=hours),
+    }
+
+    return pd.DataFrame(data)
+
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
@@ -638,3 +655,4 @@ st.markdown("""
 </div>
 
 """, unsafe_allow_html=True)
+

@@ -300,7 +300,6 @@ with st.sidebar:
         st.success("✅ Data refreshed!")
     
     auto_refresh = st.checkbox("🔁 Auto-refresh (5s)", value=st.session_state.auto_refresh)
-    st.experimental_rerun()
     st.session_state.auto_refresh = auto_refresh
     
     st.markdown("---")
@@ -637,4 +636,5 @@ st.markdown("""
     <p>AI-Powered Smart Energy Control with ML Forecasting</p>
     <p style='font-size: 12px;'>Version 1.0 | Powered by Prophet ML & FastAPI</p>
 </div>
+
 """, unsafe_allow_html=True)

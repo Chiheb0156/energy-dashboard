@@ -1,0 +1,94 @@
+# ==================================================
+# Neuro-Fuzzy Smart Home Energy Management System
+# Academic Laboratory Implementation
+# ==================================================
+
+import numpy as np
+import streamlit as st
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# --------------------------------------------------
+# 1. LSTM-BASED PREDICTION (SIMPLIFIED ACADEMIC MODEL)
+# --------------------------------------------------
+
+def energy_prediction(hour):
+    """
+    Simulated LSTM energy consumption prediction
+    """
+    if 18 <= hour <= 22:
+        return 3200
+    elif 6 <= hour <= 9:
+        return 2200
+    else:
+        return 1300
+
+
+def solar_prediction(hour):
+    """
+    Simulated LSTM solar generation prediction
+    """
+    if 6 <= hour <= 18:
+        return 2500
+    else:
+        return 0
+
+
+# --------------------------------------------------
+# 2. FUZZY LOGIC CONTROLLER
+# --------------------------------------------------
+
+energy = ctrl.Antecedent(np.arange(0, 4001, 1), 'energy')
+solar = ctrl.Antecedent(np.arange(0, 4001, 1), 'solar')
+decision = ctrl.Consequent(np.arange(0, 101, 1), 'decision')
+
+# Membership functions
+energy['low'] = fuzz.trimf(energy.universe, [0, 0, 1500])
+energy['medium'] = fuzz.trimf(energy.universe, [1000, 2200, 3200])
+energy['high'] = fuzz.trimf(energy.universe, [2500, 4000, 4000])
+
+solar['low'] = fuzz.trimf(solar.universe, [0, 0, 1500])
+solar['medium'] = fuzz.trimf(solar.universe, [1000, 2200, 3200])
+solar['high'] = fuzz.trimf(solar.universe, [2500, 4000, 4000])
+
+decision['none'] = fuzz.trimf(decision.universe, [0, 0, 30])
+decision['moderate'] = fuzz.trimf(decision.universe, [20, 50, 80])
+decision['aggressive'] = fuzz.trimf(decision.universe, [70, 100, 100])
+
+# Fuzzy rules (cover demand, solar, optimization scenarios)
+rule1 = ctrl.Rule(energy['high'] & solar['low'], decision['aggressive'])
+rule2 = ctrl.Rule(energy['high'] & solar['medium'], decision['moderate'])
+rule3 = ctrl.Rule(energy['medium'] & solar['low'], decision['moderate'])
+rule4 = ctrl.Rule(energy['low'] & solar['high'], decision['none'])
+rule5 = ctrl.Rule(energy['medium'] & solar['high'], decision['none'])
+rule6 = ctrl.Rule(energy['low'] & solar['low'], decision['moderate'])
+
+control_system = ctrl.ControlSystem([
+    rule1, rule2, rule3, rule4, rule5, rule6
+])
+
+controller = ctrl.ControlSystemSimulation(control_system)
+
+# --------------------------------------------------
+# 3. STREAMLIT DASHBOARD
+# --------------------------------------------------
+
+st.title("Neuro-Fuzzy Smart Home Energy Management System")
+
+hour = st.slider("Time of Day (Hour)", 0, 23, 12)
+
+predicted_energy = energy_prediction(hour)
+predicted_solar = solar_prediction(hour)
+
+controller.input['energy'] = predicted_energy
+controller.input['solar'] = predicted_solar
+controller.compute()
+
+st.subheader("Prediction Results")
+st.write(f"Predicted Energy Consumption: {predicted_energy} W")
+st.write(f"Predicted Solar Generation: {predicted_solar} W")
+
+st.subheader("Fuzzy Logic Decision")
+st.write(f"Appliance Reduction Level: {controller.output['decision']:.1f} %")
+
+st.success("System execution completed successfully")
